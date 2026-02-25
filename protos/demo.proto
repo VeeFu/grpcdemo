@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "vdrake.demo.helloworld";
+option java_outer_classname = "vdrakedemo";
+option objc_class_prefix = "vdrake";
+
+package resumedemo;
+import "google/protobuf/empty.proto";
+
+message ResumeSummary {
+	string ID = 1;
+	string Name = 2;
+}
+
+message ResumeSummaryList {
+	repeated ResumeSummary list = 1;
+}
+
+message Resume {
+	string ID = 1;
+	string Name = 2;
+	string Title = 3;
+	string Experience = 4;
+	string Education = 5;
+}
+
+message GetRequest{
+	string ID = 1;
+}
+
+service ResumeService {
+	rpc GetAll(google.protobuf.Empty) returns (ResumeSummaryList);
+	rpc Get(GetRequest) returns (Resume);
+}
+
+

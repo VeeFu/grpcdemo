@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <map>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -26,24 +27,53 @@ using resumedemo::GetRequest;
 
 ABSL_FLAG(uint16_t, port, 50051, "Server port for the service");
 
-// Logic and data behind the server's behavior.
+class ResumeData
+{
+  ResumeData(){} // private constructor
+public:
+  std::map<std::string, Resume> data;
+
+  static ResumeData load()
+  {
+    Resume sample;
+    sample.set_id("id0x0x0x0x");
+    sample.set_name("Vincent Drake");
+    sample.set_title("Senior Software Engineer");
+    sample.set_experience("20+ years of experience");
+    sample.set_education("Incomplete Bachelor Degree");
+
+    ResumeData ret;
+    ret.data.insert({sample.id(), std::move(sample)});
+    return ret;
+  }
+};
+
 class ResumeServiceImpl final : public ResumeService::Service
 {
+private:
+  ResumeData data;
+
+public:
+  ResumeServiceImpl() : data{ResumeData::load()}
+  {}
+
   Status GetAll(ServerContext* context, const Empty* request, ResumeSummaryList* response) override 
   {
-    auto summary = response->add_list();
-    summary->set_id("id0x0x0x0x0x");
-    summary->set_name("Vincent Drake");
+    for (const auto& [resumeID, resume] : data.data)
+    {
+      auto summary = response->add_list();
+      summary->set_id(resumeID);
+      summary->set_name(resume.name());
+    }
     return Status::OK;
   }
 
   Status Get(ServerContext* context, const GetRequest* request, Resume* response)
   {
-    response->set_id("id0x0x0x0x");
-    response->set_name("Vincent Drake");
-    response->set_title("Senior Software Engineer");
-    response->set_experience("20+ years of experience");
-    response->set_education("Incomplete Bachelor Degree");
+    const auto& found = data.data.find(request->id());
+    if (found != data.data.end()){
+      *response = found->second;
+    }
     return Status::OK;
   }
 };
